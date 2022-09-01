@@ -17,17 +17,12 @@ function textToSpeech(text, lang) {
             }),
             headers: {
                 "Content-Type": "application/json",
-                "X-goog-api-key": process.env.API_KEY
+                "X-goog-api-key": process.env.API_KEY //Coloque o token aqui
             }
         }
 
         request.post("https://texttospeech.googleapis.com/v1/text:synthesize", options, (error, response, data) => {
-            if (response.statusCode === 200 && !error) {
-                return resolve(data)
-            } else {
-                console.log(response.statusCode)
-                console.log(error)
-            }
+            return resolve(data)
         })
     })
 }
@@ -42,17 +37,14 @@ function translate(text, source, target) {
         const options = {
             headers: {
                 "Content-Type": "application/json",
-                "X-goog-api-key": process.env.API_KEY
+                "X-goog-api-key": process.env.API_KEY //Coloque o token aqui
             }
         }
 
         const url = `https://translation.googleapis.com/language/translate/v2?q=${text}&target=${target}&format=text&source=${source}`
 
         request.post(url, options, (error, response, data) => {
-            if (response.statusCode === 200 && !error) {
-                console.log(response.statusCode)
-                return resolve(JSON.parse(data).data.translations[0].translatedText)
-            }
+            return resolve(JSON.parse(data).data.translations[0].translatedText)
         })
     })
 }

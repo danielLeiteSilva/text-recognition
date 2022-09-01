@@ -8,7 +8,7 @@ const googleService = require('./GoogleService')
 const tesseractService = require('./TesseractService')
 
 const app = express()
-const port = process.env.PORT || 8081
+const port = process.env.PORT || 8080
 
 app.use(express.json())
 
@@ -27,4 +27,4 @@ app.post("/translate", async (req, res) => {
 })
 
 
-app.listen(port, () => console.log(`Connected on pont -> ${port}`))
+app.listen(port, () => console.log(`Connected on port -> ${port}`))
