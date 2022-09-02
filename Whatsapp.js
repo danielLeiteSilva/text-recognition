@@ -1,48 +1,101 @@
+//Enviroment
 require('dotenv').config()
-const venom = require('venom-bot');
-const mime = require('mime-types');
-const fs = require('fs')
 
+//Libs
+const venom = require('venom-bot');
+const fs = require('fs')
 
 //services
 const googleService = require('./GoogleService')
 const tesseractService = require('./TesseractService')
 
-venom.create({
-    session: 'session-name', //name of session
-    multidevice: true // for version not multidevice use false.(default: true)
-})
-    .then((client) => start(client))
-    .catch((erro) => {
-        console.log(erro);
-    });
+//Cache
+const cache = require('./Cache')
+
+//utils
+const { dateHourLog, createFile, createFileWithExt } = require('./Utils')
+
+//Prototypes
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
+function run() {
+    venom.create({ session: 'session-name', multidevice: true })
+        .then((client) => start(client))
+        .catch((erro) => {
+            console.log(erro);
+        });
+}
 
 function start(client) {
     client.onMessage(async (message) => {
+
         try {
 
-            if (message.isMedia) {
+            let msg = ""
+            if (message.body !== undefined) {
+                msg = message.body.toLowerCase()
+            }
+
+            if (msg === '/search' && message.isGroupMsg === false) {
+                cache.changeCache('cache.json')
+                const validate = cache.readFileCache("cache.json")
+                console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate.search}...`)
+            } else if (message.mimetype.includes("audio") && message.isGroupMsg === false) {
+
+                console.log(`[${dateHourLog()}] Usuário ${message.notifyName} enviou um audio...`)
+                await client.sendText(message.from, '⌛ Estamos processando sua resposta. Aguarde...')
+
                 const buffer = await client.decryptFile(message);
-                const fileName = `image.${mime.extension(message.mimetype)}`;
-                fs.writeFileSync(fileName, buffer);
+                const base64 = Buffer.from(buffer).toString('base64')
+
+                let text = await googleService.speechToText(base64)
+                await client.sendText(message.from, `🎤 Audio para 📝 texto: \n\n${text.capitalize()}`)
+
+                let validate = cache.readFileCache("cache.json")
+
+                if (validate.search) {
+                    const image = await googleService.search(text)
+                    await client.sendImage(
+                        message.from,
+                        image,
+                        'image-search'
+                    )
+                    cache.changeCache('cache.json')
+                    validate = cache.readFileCache("cache.json")
+                    console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate.search}...`)
+                }
+
+            } else if (message.mimetype.includes("image") && message.isGroupMsg === false) {
+
+                console.log(`[${dateHourLog()}] Usuário ${message.notifyName} enviou uma imagem...`)
+                await client.sendText(message.from, '⌛ Estamos processando sua resposta. Aguarde...')
+
+                const fileName = await createFile("image", client, message)
 
                 const text = await tesseractService.extractTextLocal(fileName)
-                await client.sendText(message.from, `Português: \n${text}`)
-
                 const translated = await googleService.translate(text, "pt", 'en')
-                await client.sendText(message.from, `Inglês: \n${translated}`)
-
                 const resolve = await googleService.textToSpeech(translated, 'en')
 
-                let buff = Buffer.from(resolve, 'base64')
-                fs.writeFileSync('audio.mp3', buff)
+                await createFileWithExt("audio", resolve, "mp3")
 
+                await client.sendText(message.from, `🗣️ Português: \n${text.capitalize()}`)
+                await client.sendText(message.from, `🗣️ Inglês: \n${translated.capitalize()}`)
                 await client.sendVoice(message.from, './audio.mp3')
+            } else {
+                console.log(`[${dateHourLog()}][start] - Mídia inválida`)
+                await client.sendText(message.from, `❌ Mídia não reconhecida. Envie uma imagem 🖼️ ou um áudio 🎤`)
             }
 
         } catch (error) {
-            console.log(`Houve um erro: ${error.message}`)
+            console.log(`[${dateHourLog()}][start] - Houve um erro: ${error}`)
+            await client.sendText(message.from, `❌ Não foi possível efetuar a leitura do arquivo. Por favor, envie outro arquivo!!!`)
         }
-
     });
+}
+
+
+module.exports = {
+    run
 }

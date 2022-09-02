@@ -19,6 +19,7 @@
     "mime-types": "^2.1.35",
     "request": "^2.88.2",
     "tesseract.js": "^3.0.2",
-    "venom-bot": "^4.3.0"
+    "venom-bot": "^4.3.0",
+    "woke-dyno": "0.0.4"
   }
 }

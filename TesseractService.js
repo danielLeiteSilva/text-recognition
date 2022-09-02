@@ -1,7 +1,7 @@
 const { createWorker } = require('tesseract.js')
 
 const worker = createWorker({
-    logger: function(m) { return m }
+    logger: m => m
 });
 
 async function extractText(body) {
@@ -11,7 +11,10 @@ async function extractText(body) {
 
     const { data: { text } } = await worker.recognize(body.image.url)
 
-    return text.split("\n").join(" ").toLowerCase()
+    return text
+        .split("\n")
+        .join("\s")
+        .toLowerCase()
 }
 
 async function extractTextLocal(fileName) {
@@ -21,7 +24,10 @@ async function extractTextLocal(fileName) {
 
     const { data: { text } } = await worker.recognize(`./${fileName}`)
 
-    return text.split("\n").join(" ").toLowerCase()
+    return text
+        .split("\n")
+        .join("\s")
+        .toLowerCase()
 }
 
 
