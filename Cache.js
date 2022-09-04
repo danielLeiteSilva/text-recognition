@@ -1,26 +1,26 @@
 const fs = require('fs');
+const path = require('path')
 
-function readFileCache(cacheFile) {
-    const buffer = fs.readFileSync(`./${cacheFile}`)
+const pathFile = path.join(__dirname, ".", "cache.json")
+
+function readFileCache() {
+    const buffer = fs.readFileSync(pathFile)
     return JSON.parse(Buffer.from(buffer).toString())
 }
 
-function writeFileCache(cacheFile, data) {
-    fs.writeFileSync(`./${cacheFile}`, JSON.stringify(data))
+function writeFileCache(data) {
+    fs.writeFileSync(pathFile, JSON.stringify(data))
 }
 
-function changeCache(cacheFile) {
-    const file = readFileCache(cacheFile)
-    if (file["search"]) {
-        file["search"] = false
-        writeFileCache(cacheFile, file)
-    } else {
-        file["search"] = true
-        writeFileCache(cacheFile, file)
-    }
+function changeCache() {
+    const file = readFileCache()
+    file["search"] = file["search"] ? false : true
+    writeFileCache(file)
+
     return file
 }
 
+console.log(changeCache())
 
 
 module.exports = {

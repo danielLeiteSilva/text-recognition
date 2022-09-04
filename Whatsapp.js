@@ -57,11 +57,7 @@ function start(client) {
 
                 if (validate.search) {
                     const image = await googleService.search(text)
-                    await client.sendImage(
-                        message.from,
-                        image,
-                        'image-search'
-                    )
+                    await client.sendImage(message.from, image,'image-search')
                     cache.changeCache('cache.json')
                     validate = cache.readFileCache("cache.json")
                     console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate.search}...`)
