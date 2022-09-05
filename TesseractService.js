@@ -4,12 +4,12 @@ const worker = createWorker({
     logger: m => m
 });
 
-async function extractText(body) {
+async function extractText(url) {
     await worker.load();
     await worker.loadLanguage('por')
     await worker.initialize('por')
 
-    const { data: { text } } = await worker.recognize(body.image.url)
+    const { data: { text } } = await worker.recognize(url)
 
     return text
         .split("\n")

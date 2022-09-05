@@ -11,27 +11,50 @@ const tesseractService = require('./TesseractService')
 //Whatsapp
 const whatsapp = require('./Whatsapp')
 
+//Cache
+const cache = require('./Cache')
+const { file } = require('googleapis/build/src/apis/file')
+
 const app = express()
 const port = process.env.PORT || 8080
 
 app.use(express.json())
 
-app.post("/translate", async (req, res) => {
-
-    const text = await tesseractService.extractText(req.body)
-
-    const translated = await googleService.translate(text, "pt", 'en')
-    const resolve = await googleService.textToSpeech(translated, 'en')
-    let buff = Buffer.from(resolve, 'base64')
-    fs.writeFileSync('audio.mp3', buff)
-
-    let filePath = path.join(__dirname, "audio.mp3")
-    res.download(filePath, 'audio.mp3')
-
+app.get("/cache", (req, res) => {
+    const cacheInfo = cache.readFileCache()
+    res.status(200).json(cacheInfo)
 })
 
+app.get("/translate_image", async (req, res) => {
+    const fileName = req.query.fileName || "audio.mp3"
+    await download(res, req.query.url, fileName)
+})
 
-app.listen(port, async () => { 
+app.post("/translate_image", async (req, res) => {
+    const fileName = req.body.fileName || "audio.mp3"
+    await download(res, req.body.image.url, fileName)
+})
+
+app.get("/translate_text", async (req, res) => {
+    const fileName = req.query.fileName || "audio.mp3"
+    const text = req.query.text || "teste de aúdio"
+    await download(res, req.query.url, fileName, text)
+})
+
+async function download(res, url, fileName, textInput) {
+
+    const text = url ? await tesseractService.extractText(url) : textInput
+
+    const translated = await googleService.translate(text, 'pt', 'en')
+    const resolve = await googleService.textToSpeech(translated, 'en')
+    let buff = Buffer.from(resolve, 'base64')
+    fs.writeFileSync(fileName, buff)
+
+    let filePath = path.join(__dirname, fileName)
+    res.download(filePath, fileName)
+}
+
+app.listen(port, async () => {
 
     console.log(`Connected on port -> ${port}`)
     await whatsapp.run()

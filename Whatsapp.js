@@ -39,9 +39,9 @@ function start(client) {
             }
 
             if (msg === '/search' && message.isGroupMsg === false) {
-                cache.changeCache('cache.json')
-                const validate = cache.readFileCache("cache.json")
-                console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate.search}...`)
+                cache.changeCache(message.from)
+                const validate = cache.readFileCache()
+                console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate[message.from]}...`)
             } else if (message.mimetype.includes("audio") && message.isGroupMsg === false) {
 
                 console.log(`[${dateHourLog()}] Usuário ${message.notifyName} enviou um audio...`)
@@ -53,14 +53,14 @@ function start(client) {
                 let text = await googleService.speechToText(base64)
                 await client.sendText(message.from, `🎤 Audio para 📝 texto: \n\n${text.capitalize()}`)
 
-                let validate = cache.readFileCache("cache.json")
+                let validate = cache.readFileCache()
 
-                if (validate.search) {
+                if (validate[message.from]) {
                     const image = await googleService.search(text)
-                    await client.sendImage(message.from, image,'image-search')
-                    cache.changeCache('cache.json')
-                    validate = cache.readFileCache("cache.json")
-                    console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate.search}...`)
+                    await client.sendImage(message.from, image, 'image-search')
+                    cache.changeCache(message.from)
+                    validate = cache.readFileCache()
+                    console.log(`[${dateHourLog()}] Usuário ${message.notifyName} alterou valor do cache para ${validate[message.from]}...`)
                 }
 
             } else if (message.mimetype.includes("image") && message.isGroupMsg === false) {

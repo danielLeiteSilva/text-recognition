@@ -12,15 +12,17 @@ function writeFileCache(data) {
     fs.writeFileSync(pathFile, JSON.stringify(data))
 }
 
-function changeCache() {
+function changeCache(user) {
     const file = readFileCache()
-    file["search"] = file["search"] ? false : true
-    writeFileCache(file)
 
+    if (!file[user]) {
+        file[user] = true
+    } else {
+        file[user] = file[user] ? false : true
+    }
+    writeFileCache(file)
     return file
 }
-
-console.log(changeCache())
 
 
 module.exports = {
